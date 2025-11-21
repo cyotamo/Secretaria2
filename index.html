@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <title>Secretaria Online - Universidade Rovuma</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-title">
+        <h1>Universidade Rovuma</h1>
+        <p>Faculdade de Ciências Económicas e Empresariais</p>
+        <p class="sub">Secretaria Online</p>
+    </div>
+    <button class="btn-login">Login Docentes/Gestores</button>
+</header>
+
+<main class="layout">
+
+    <aside class="sidebar">
+        <div class="group">
+            <button class="group-btn" data-group="cadastro">Cadastros</button>
+            <div class="group-body" id="cadastro">
+                <button class="menu-btn" data-feature="Submissão de tema">Submissão de tema</button>
+                <button class="menu-btn" data-feature="Submissão de versão final">Submissão de versão final</button>
+                <button class="menu-btn" data-feature="Credencial de estágio">Pedido de credencial</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <button class="group-btn" data-group="consultas">Consultas</button>
+            <div class="group-body" id="consultas">
+                <button class="menu-btn" data-feature="Estado do tema">Estado do tema</button>
+                <button class="menu-btn" data-feature="Estado da versão final">Estado da versão final</button>
+                <button class="menu-btn" data-feature="Estado do estágio">Estado do pedido de estágio</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <button class="group-btn" data-group="formularios">Formulários</button>
+            <div class="group-body" id="formularios">
+                <button class="menu-btn" data-feature="Formulários">Baixar formulários</button>
+            </div>
+        </div>
+    </aside>
+
+    <section class="content" id="contentPanel"></section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
