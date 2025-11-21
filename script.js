@@ -1,6 +1,6 @@
-
 document.addEventListener("DOMContentLoaded", () => {
     const panel = document.getElementById("contentPanel");
+    const sidebar = document.querySelector(".sidebar");
     const managerAccessCode = "1234";
 
     function attachGroupListeners(scope) {
@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.addEventListener("click", () => {
                 const id = btn.dataset.group;
                 const body = scope.querySelector(`#${id}`) || document.getElementById(id);
+
                 if (body) {
                     body.style.display = body.style.display === "block" ? "none" : "block";
                 }
@@ -15,23 +16,27 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    attachGroupListeners(document);
+    function attachStudentMenuListeners() {
+        if (!sidebar) return;
 
-    document.querySelectorAll(".menu-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const feature = btn.dataset.feature;
+        sidebar.querySelectorAll(".menu-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const feature = btn.dataset.feature;
 
-            if (feature === "Submissão de tema") {
-                renderSubmissionForm();
-                return;
-            }
+                if (feature === "Submissão de tema") {
+                    renderSubmissionForm();
+                    return;
+                }
 
-            panel.innerHTML = `
-                <h2>${feature}</h2>
-                <p>Conteúdo desta funcionalidade será adicionado aqui.</p>
-            `;
+                if (panel) {
+                    panel.innerHTML = `
+                        <h2>${feature}</h2>
+                        <p>Conteúdo desta funcionalidade será adicionado aqui.</p>
+                    `;
+                }
+            });
         });
-    });
+    }
 
     function applyStudentMask(input) {
         input.setAttribute("maxlength", "12");
@@ -86,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderSubmissionForm() {
+        if (!panel) return;
+
         panel.innerHTML = `
             <div class="formulario">
                 <h2>Submissão de Tema de Monografia</h2>
@@ -130,6 +137,9 @@ document.addEventListener("DOMContentLoaded", () => {
             applyPhoneMask(phoneInput);
         }
     }
+
+    attachGroupListeners(document);
+    attachStudentMenuListeners();
 
     const loginOverlay = document.getElementById("loginOverlay");
     const closeLoginModal = document.getElementById("closeLoginModal");
@@ -188,18 +198,18 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="group">
                 <button class="group-btn" data-group="gestor-processos">Gerir Processos</button>
                 <div class="group-body" id="gestor-processos">
-                    <button class="menu-btn" data-feature="Submissões de tema de monografia">Submissões de tema de monografia</button>
-                    <button class="menu-btn" data-feature="Homologação de supervisores">Homologação de supervisores</button>
-                    <button class="menu-btn" data-feature="Versão final da monografia">Versão final da monografia</button>
-                    <button class="menu-btn" data-feature="Buscar estudante">Buscar estudante</button>
+                    <button class="menu-btn" data-admin="true" data-feature="Submissões de tema de monografia">Submissões de tema de monografia</button>
+                    <button class="menu-btn" data-admin="true" data-feature="Homologação de supervisores">Homologação de supervisores</button>
+                    <button class="menu-btn" data-admin="true" data-feature="Versão final da monografia">Versão final da monografia</button>
+                    <button class="menu-btn" data-admin="true" data-feature="Buscar estudante">Buscar estudante</button>
                 </div>
             </div>
 
             <div class="group">
                 <button class="group-btn" data-group="gestor-relatorios">Relatórios</button>
                 <div class="group-body" id="gestor-relatorios">
-                    <button class="menu-btn" data-feature="Supervisores homologados">Supervisores homologados</button>
-                    <button class="menu-btn" data-feature="Supervisores por homologar">Supervisores por homologar</button>
+                    <button class="menu-btn" data-admin="true" data-feature="Supervisores homologados">Supervisores homologados</button>
+                    <button class="menu-btn" data-admin="true" data-feature="Supervisores por homologar">Supervisores por homologar</button>
                 </div>
             </div>
 
@@ -213,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const gestorContent = panel.querySelector("#gestorFeatureContent");
 
-        panel.querySelectorAll(".menu-btn").forEach(btn => {
+        panel.querySelectorAll('.menu-btn[data-admin="true"]').forEach(btn => {
             btn.addEventListener("click", () => {
                 const feature = btn.dataset.feature;
 
@@ -235,7 +245,9 @@ document.addEventListener("DOMContentLoaded", () => {
             loginError.remove();
 
             if (codigo === managerAccessCode) {
+                console.log("Gestor autenticado");
                 renderGestorDashboard();
+                alert("Acesso concedido ao painel do gestor");
                 closeLogin();
                 loginForm.reset();
             } else {
