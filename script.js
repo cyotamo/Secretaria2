@@ -1,14 +1,21 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     const panel = document.getElementById("contentPanel");
+    const managerAccessCode = "1234";
 
-    document.querySelectorAll(".group-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const id = btn.dataset.group;
-            const body = document.getElementById(id);
-            body.style.display = body.style.display === "block" ? "none" : "block";
+    function attachGroupListeners(scope) {
+        scope.querySelectorAll(".group-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.dataset.group;
+                const body = scope.querySelector(`#${id}`) || document.getElementById(id);
+                if (body) {
+                    body.style.display = body.style.display === "block" ? "none" : "block";
+                }
+            });
         });
-    });
+    }
+
+    attachGroupListeners(document);
 
     document.querySelectorAll(".menu-btn").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -130,6 +137,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const loginButton = document.querySelector(".btn-login");
     const loginForm = document.getElementById("loginForm");
     const codigoAcessoInput = document.getElementById("codigoAcesso");
+    const loginError = document.createElement("p");
+
+    loginError.style.color = "#c1121f";
+    loginError.style.margin = "6px 0 0";
+    loginError.style.fontSize = "13px";
+    loginError.textContent = "Código de acesso inválido.";
 
     function openLoginModal() {
         if (loginOverlay) {
@@ -168,9 +181,69 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function renderGestorDashboard() {
+        if (!panel) return;
+
+        panel.innerHTML = `
+            <div class="group">
+                <button class="group-btn" data-group="gestor-processos">Gerir Processos</button>
+                <div class="group-body" id="gestor-processos">
+                    <button class="menu-btn" data-feature="Submissões de tema de monografia">Submissões de tema de monografia</button>
+                    <button class="menu-btn" data-feature="Homologação de supervisores">Homologação de supervisores</button>
+                    <button class="menu-btn" data-feature="Versão final da monografia">Versão final da monografia</button>
+                    <button class="menu-btn" data-feature="Buscar estudante">Buscar estudante</button>
+                </div>
+            </div>
+
+            <div class="group">
+                <button class="group-btn" data-group="gestor-relatorios">Relatórios</button>
+                <div class="group-body" id="gestor-relatorios">
+                    <button class="menu-btn" data-feature="Supervisores homologados">Supervisores homologados</button>
+                    <button class="menu-btn" data-feature="Supervisores por homologar">Supervisores por homologar</button>
+                </div>
+            </div>
+
+            <div class="gestor-conteudo" id="gestorFeatureContent">
+                <h2>Painel do Gestor</h2>
+                <p>Selecione uma funcionalidade para ver mais detalhes.</p>
+            </div>
+        `;
+
+        attachGroupListeners(panel);
+
+        const gestorContent = panel.querySelector("#gestorFeatureContent");
+
+        panel.querySelectorAll(".menu-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const feature = btn.dataset.feature;
+
+                if (gestorContent) {
+                    gestorContent.innerHTML = `
+                        <h2>${feature}</h2>
+                        <p>Conteúdo de gestão será adicionado.</p>
+                    `;
+                }
+            });
+        });
+    }
+
     if (loginForm) {
         loginForm.addEventListener("submit", (event) => {
             event.preventDefault();
+            const codigo = codigoAcessoInput?.value || "";
+
+            loginError.remove();
+
+            if (codigo === managerAccessCode) {
+                renderGestorDashboard();
+                closeLogin();
+                loginForm.reset();
+            } else {
+                const parent = codigoAcessoInput?.parentElement;
+                if (parent && !parent.contains(loginError)) {
+                    parent.appendChild(loginError);
+                }
+            }
         });
     }
 });
