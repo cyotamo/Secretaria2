@@ -11,13 +11,15 @@ document.querySelectorAll(".group-btn").forEach(btn => {
 
 document.querySelectorAll(".menu-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-        if (btn.dataset.feature === "Submissão de tema") {
+        const feature = btn.dataset.feature;
+
+        if (feature === "Submissão de tema") {
             renderSubmissionForm();
             return;
         }
 
         panel.innerHTML = `
-            <h2>${btn.dataset.feature}</h2>
+            <h2>${feature}</h2>
             <p>Conteúdo desta funcionalidade será adicionado aqui.</p>
         `;
     });
@@ -55,7 +57,7 @@ function renderSubmissionForm() {
                 <button type="submit" class="btn-submeter">Submeter Tema</button>
             </form>
         </div>
-    `;
+        `;
 
     const studentInput = document.getElementById("numeroEstudante");
     const phoneInput = document.getElementById("contactoTelefonico");
@@ -71,11 +73,11 @@ function renderSubmissionForm() {
             let formatted = first;
 
             if (digits.length > 2) {
-                formatted += "." + second;
+                formatted = `${first}.${second}`;
             }
 
             if (digits.length > 6) {
-                formatted += "." + third;
+                formatted = `${first}.${second}.${third}`;
             }
 
             studentInput.value = formatted;
@@ -90,12 +92,13 @@ function renderSubmissionForm() {
             const ddd = digits.slice(0, 2);
             const firstPart = digits.slice(2, 6);
             const secondPart = digits.slice(6, 9);
-            let formatted = ddd;
+            let formatted = "";
 
             if (digits.length > 0) {
                 formatted = `(${ddd}`;
+
                 if (digits.length >= 2) {
-                    formatted += `)`;
+                    formatted += ")";
                 }
             }
 
