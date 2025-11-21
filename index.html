@@ -50,6 +50,24 @@
 
 </main>
 
+<div class="modal-overlay" id="loginOverlay">
+    <div class="modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header">
+            <h3 id="modalTitle">Acesso Restrito</h3>
+            <button type="button" class="modal-close" id="closeLoginModal" aria-label="Fechar">&times;</button>
+        </div>
+        <form class="modal-body" id="loginForm">
+            <label for="codigoAcesso">Código de Acesso</label>
+            <input id="codigoAcesso" type="password" name="codigoAcesso" placeholder="Insira o código" maxlength="6" required inputmode="numeric" pattern="\\d{1,6}">
+
+            <div class="modal-actions">
+                <button type="submit" class="modal-submit">Entrar</button>
+                <button type="button" class="modal-cancel" id="cancelLoginModal">Fechar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script src="script.js"></script>
 </body>
 </html>
