@@ -114,3 +114,53 @@ function renderSubmissionForm() {
         });
     }
 }
+
+const loginOverlay = document.getElementById("loginOverlay");
+const closeLoginModal = document.getElementById("closeLoginModal");
+const cancelLoginModal = document.getElementById("cancelLoginModal");
+const loginButton = document.querySelector(".btn-login");
+const loginForm = document.getElementById("loginForm");
+const codigoAcessoInput = document.getElementById("codigoAcesso");
+
+function openLoginModal() {
+    if (loginOverlay) {
+        loginOverlay.style.display = "flex";
+        codigoAcessoInput?.focus();
+    }
+}
+
+function closeLogin() {
+    if (loginOverlay) {
+        loginOverlay.style.display = "none";
+    }
+}
+
+if (loginButton && loginOverlay) {
+    loginButton.addEventListener("click", openLoginModal);
+}
+
+[closeLoginModal, cancelLoginModal].forEach(btn => {
+    if (btn) {
+        btn.addEventListener("click", closeLogin);
+    }
+});
+
+if (loginOverlay) {
+    loginOverlay.addEventListener("click", (event) => {
+        if (event.target === loginOverlay) {
+            closeLogin();
+        }
+    });
+}
+
+if (codigoAcessoInput) {
+    codigoAcessoInput.addEventListener("input", () => {
+        codigoAcessoInput.value = codigoAcessoInput.value.replace(/\D/g, "").slice(0, 6);
+    });
+}
+
+if (loginForm) {
+    loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+    });
+}
