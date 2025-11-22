@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const submitButton = panel.querySelector(".btn-submeter");
-        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzH6F45Gc9CS-6ATGYMxmixMIL9X-QCrTwnMDJmz0atDwHf4xmf_CWVOIFXHu6aeND0zA/exec";
+        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbylHZEGwG3E0wg0ejejN5ktHX2gRkIuJ6HCscTjge7A1WyGu1GGGN59JDqlrKp1Hyz9Wg/exec";
 
         if (submitButton) {
             submitButton.addEventListener("click", async (event) => {
@@ -157,20 +157,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 const tituloTema = document.getElementById("tituloTema")?.value.trim() || "";
                 const descricaoTema = document.getElementById("descricaoTema")?.value.trim() || "";
 
-                const payload = {
-                    nome,
-                    numeroEstudante,
-                    contacto,
-                    curso,
-                    tituloTema,
-                    descricaoTema,
-                };
+                const payload = new FormData();
+
+                payload.append("nome", nome);
+                payload.append("numeroEstudante", numeroEstudante);
+                payload.append("contacto", contacto);
+                payload.append("curso", curso);
+                payload.append("tituloTema", tituloTema);
+                payload.append("descricaoTema", descricaoTema);
 
                 try {
                     const response = await fetch(WEBAPP_URL, {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload),
+                        body: payload,
                     });
 
                     const data = await response.json();
