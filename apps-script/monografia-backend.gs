@@ -4,6 +4,9 @@
 const SPREADSHEET_ID = '1rTmgTuGU5nnleWYlysuWRGRDlT18Dm_QcWUbJvTzFSk';
 const SHEET_NAME = 'Dados';
 
+const ACTION_LIST_SUBMISSIONS = 'listarSubmissoes';
+const ACTION_UPDATE_REVIEW = 'atualizarParecerSupervisor';
+
 const HEADER = [
   'Timestamp',
   'Nome',
@@ -59,12 +62,114 @@ function validatePayload(payload) {
   }
 }
 
+function parseRequestBody(e) {
+  if (!e || !e.postData || !e.postData.contents) {
+    return {};
+  }
+
+  const { contents, type } = e.postData;
+
+  if (type === 'application/json') {
+    try {
+      return JSON.parse(contents);
+    } catch (err) {
+      return {};
+    }
+  }
+
+  if (type === 'application/x-www-form-urlencoded') {
+    return contents
+      .split('&')
+      .map(function (pair) {
+        const [key, value] = pair.split('=');
+        return [decodeURIComponent(key || ''), decodeURIComponent(value || '')];
+      })
+      .reduce(function (acc, curr) {
+        const [key, value] = curr;
+        if (key) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+  }
+
+  return {};
+}
+
+function getAction(e, parsedBody) {
+  const params = (e && e.parameter) || {};
+  if (params.action) {
+    return params.action;
+  }
+
+  if (parsedBody && parsedBody.action) {
+    return parsedBody.action;
+  }
+
+  return '';
+}
+
+function handleListSubmissions() {
+  const sheet = getSheet();
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return jsonResponse(200, []);
+  }
+
+  const data = sheet.getRange(2, 1, lastRow - 1, HEADER.length).getValues();
+
+  const submissions = data.map(function (row, index) {
+    return {
+      timestamp: row[0] instanceof Date ? row[0].toISOString() : row[0],
+      nome: row[1],
+      numeroEstudante: row[2],
+      curso: row[4],
+      tituloTema: row[5],
+      supervisor: row[8],
+      parecer: row[9],
+      linha: index + 2
+    };
+  });
+
+  return jsonResponse(200, submissions);
+}
+
+function handleUpdateSubmission(params, body) {
+  const targetLine = Number((params && params.linha) || (body && body.linha));
+  const supervisor = (params && params.supervisor) || (body && body.supervisor) || '';
+  const parecer = (params && params.parecer) || (body && body.parecer) || '';
+
+  if (!targetLine || targetLine < 2) {
+    return jsonResponse(400, { sucesso: false, mensagem: 'Linha inválida.' });
+  }
+
+  const sheet = getSheet();
+  const lastRow = sheet.getLastRow();
+
+  if (targetLine > lastRow) {
+    return jsonResponse(404, { sucesso: false, mensagem: 'Linha não encontrada.' });
+  }
+
+  sheet.getRange(targetLine, 9).setValue(supervisor);
+  sheet.getRange(targetLine, 10).setValue(parecer);
+
+  return jsonResponse(200, { sucesso: true });
+}
+
 /**
  * Handler para submissões via POST.
  * Espera um corpo JSON com os campos obrigatórios definidos em validatePayload.
  */
 function doPost(e) {
   try {
+    const parsedBody = parseRequestBody(e);
+    const action = getAction(e, parsedBody);
+
+    if (action === ACTION_UPDATE_REVIEW) {
+      return handleUpdateSubmission(e && e.parameter, parsedBody);
+    }
+
     if (!e || !e.postData || !e.postData.contents) {
       throw new Error('Corpo da requisição vazio ou inválido.');
     }
@@ -99,6 +204,21 @@ function doPost(e) {
       sucesso: false,
       mensagem: err.message || 'Erro ao processar submissão.'
     });
+  }
+}
+
+function doGet(e) {
+  try {
+    const parsedBody = parseRequestBody(e);
+    const action = getAction(e, parsedBody);
+
+    if (action === ACTION_LIST_SUBMISSIONS) {
+      return handleListSubmissions();
+    }
+
+    return jsonResponse(404, { sucesso: false, mensagem: 'Rota não encontrada.' });
+  } catch (err) {
+    return jsonResponse(400, { sucesso: false, mensagem: err.message || 'Erro ao processar requisição.' });
   }
 }
 
