@@ -127,13 +127,55 @@ document.addEventListener("DOMContentLoaded", () => {
                     <label for="descricaoTema">Descrição do tema</label>
                     <textarea id="descricaoTema" name="descricaoTema" rows="5" placeholder="Descreva brevemente o tema" required></textarea>
 
-                    <button type="submit" class="btn-submeter">Submeter Tema</button>
+                    <button type="submit" class="btn-submeter" disabled>Submeter Tema</button>
                 </form>
             </div>
             `;
 
         const studentInput = document.getElementById("numeroEstudante");
         const phoneInput = document.getElementById("contactoTelefonico");
+        const form = panel.querySelector("form");
+        const existingSuccessOverlay = document.getElementById("submissionSuccessOverlay");
+
+        if (existingSuccessOverlay) {
+            existingSuccessOverlay.remove();
+        }
+
+        const successOverlay = document.createElement("div");
+
+        successOverlay.className = "modal-overlay";
+        successOverlay.id = "submissionSuccessOverlay";
+        successOverlay.innerHTML = `
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="submissionSuccessTitle">
+                <div class="modal-header">
+                    <h3 id="submissionSuccessTitle">Submissão efectuada</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Os seus dados foram submetidos com sucesso.</p>
+                    <p>Acompanhe o estado do processo na aba “Estado do tema” usando o seu número de estudante.</p>
+                    <div class="modal-actions">
+                        <button type="button" class="modal-submit" id="closeSubmissionSuccess">OK</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(successOverlay);
+
+        const closeSuccessButton = document.getElementById("closeSubmissionSuccess");
+
+        const closeSuccessModal = () => {
+            if (successOverlay) {
+                successOverlay.style.display = "none";
+            }
+        };
+
+        closeSuccessButton?.addEventListener("click", closeSuccessModal);
+        successOverlay.addEventListener("click", (event) => {
+            if (event.target === successOverlay) {
+                closeSuccessModal();
+            }
+        });
 
         if (studentInput) {
             applyStudentMask(studentInput);
@@ -156,14 +198,18 @@ document.addEventListener("DOMContentLoaded", () => {
         ];
 
         if (submitButton) {
+            const updateSubmitState = () => {
+                const hasValue = formFields.some((field) => field && field.value.trim() !== "");
+                submitButton.disabled = !hasValue;
+            };
+
             formFields.forEach((field) => {
-                field?.addEventListener("input", () => {
-                    submitButton.disabled = false;
-                });
+                field?.addEventListener("input", updateSubmitState);
             });
 
             submitButton.addEventListener("click", async (event) => {
                 event.preventDefault();
+                submitButton.disabled = true;
 
                 const nome = document.getElementById("nomeCompleto")?.value.trim() || "";
                 const numeroEstudante = document.getElementById("numeroEstudante")?.value.trim() || "";
@@ -187,19 +233,25 @@ document.addEventListener("DOMContentLoaded", () => {
                         body: payload,
                     });
 
-                    submitButton.disabled = true;
-
                     const data = await response.json();
 
-                    if (data?.sucesso !== true) {
+                    if (data?.sucesso === true) {
+                        form?.reset();
+                        updateSubmitState();
+                        successOverlay.style.display = "flex";
+                    } else {
                         const mensagem = data?.mensagem || data?.erro || "Falha ao submeter tema";
                         alert(`Erro: ${mensagem}`);
+                        updateSubmitState();
                     }
                 } catch (error) {
                     const message = error instanceof Error ? error.message : "Erro desconhecido";
                     alert(`Erro: ${message}`);
+                    updateSubmitState();
                 }
             });
+
+            updateSubmitState();
         }
     }
 
