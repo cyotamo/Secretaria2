@@ -1,68 +1,67 @@
 // Backend Apps Script para submissão de temas de monografia (Etapa 1)
-// - Cria a planilha caso não exista
-// - Recebe submissões via doPost e grava numa folha "Temas"
-// - Responde em JSON
+// Usa planilha e aba pré-existentes para gravar os dados recebidos via doPost
 
-const CONFIG = {
-  spreadsheetName: 'SubmissoesTemasMonografia',
-  sheetName: 'Temas',
-  sheetIdProperty: 'MONOGRAFIA_SHEET_ID'
-};
+const SPREADSHEET_ID = '1FqSLZfO0733h_JZQH6hq19H6YqbSESfx';
+const SHEET_NAME = 'Dados';
+
+const HEADER = [
+  'Timestamp',
+  'Nome',
+  'NumeroEstudante',
+  'Contacto',
+  'Curso',
+  'TituloTema',
+  'DescricaoTema',
+  'Estado',
+  'Supervisor',
+  'Parecer'
+];
 
 /**
- * Obtém ou cria a planilha e a folha necessária.
- * A referência da planilha fica guardada em ScriptProperties para evitar múltiplas criações.
+ * Obtém a aba "Dados" da planilha configurada.
+ * Caso a aba esteja vazia, define o cabeçalho padrão.
  */
-function getOrCreateSheet() {
-  const props = PropertiesService.getScriptProperties();
-  const storedId = props.getProperty(CONFIG.sheetIdProperty);
-  let spreadsheet;
+function getSheet() {
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = spreadsheet.getSheetByName(SHEET_NAME);
 
-  if (storedId) {
-    try {
-      spreadsheet = SpreadsheetApp.openById(storedId);
-    } catch (err) {
-      // Se não conseguir abrir (foi apagada?), vamos criar uma nova.
-      spreadsheet = null;
-    }
-  }
-
-  if (!spreadsheet) {
-    spreadsheet = SpreadsheetApp.create(CONFIG.spreadsheetName);
-    props.setProperty(CONFIG.sheetIdProperty, spreadsheet.getId());
-  }
-
-  let sheet = spreadsheet.getSheetByName(CONFIG.sheetName);
   if (!sheet) {
-    sheet = spreadsheet.insertSheet(CONFIG.sheetName);
-    setHeader(sheet);
+    throw new Error('A aba "Dados" não foi encontrada na planilha informada.');
+  }
+
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, HEADER.length).setValues([HEADER]);
   }
 
   return sheet;
 }
 
 /**
- * Define o cabeçalho padrão da folha.
+ * Valida se todos os campos obrigatórios estão presentes no payload.
  */
-function setHeader(sheet) {
-  const header = [
-    'Timestamp',
-    'Nome do estudante',
-    'Número do estudante',
+function validatePayload(payload) {
+  const requiredFields = [
+    'Nome',
+    'NumeroEstudante',
+    'Contacto',
     'Curso',
-    'Email',
-    'Tema proposto',
-    'Resumo/justificativa',
-    'Estado',
-    'Supervisor',
-    'Observações do gestor'
+    'TituloTema',
+    'DescricaoTema'
   ];
-  sheet.getRange(1, 1, 1, header.length).setValues([header]);
+
+  const missing = requiredFields.filter(function (field) {
+    const value = payload[field];
+    return value === undefined || value === null || String(value).trim() === '';
+  });
+
+  if (missing.length > 0) {
+    throw new Error('Campos obrigatórios em falta: ' + missing.join(', '));
+  }
 }
 
 /**
- * Handler para submissão do tema (POST).
- * Espera um corpo JSON com os campos principais do formulário.
+ * Handler para submissões via POST.
+ * Espera um corpo JSON com os campos obrigatórios definidos em validatePayload.
  */
 function doPost(e) {
   try {
@@ -71,30 +70,29 @@ function doPost(e) {
     }
 
     const payload = JSON.parse(e.postData.contents);
-    const sheet = getOrCreateSheet();
+    validatePayload(payload);
 
-    const newRow = [
+    const sheet = getSheet();
+
+    const row = [
       new Date(),
-      payload.nome || '',
-      payload.numeroEstudante || '',
-      payload.curso || '',
-      payload.email || '',
-      payload.tema || '',
-      payload.resumo || '',
-      'Pendente', // Estado inicial
-      '', // Supervisor ainda não atribuído
-      '' // Observações do gestor
+      payload.Nome,
+      payload.NumeroEstudante,
+      payload.Contacto,
+      payload.Curso,
+      payload.TituloTema,
+      payload.DescricaoTema,
+      'Em análise',
+      '',
+      ''
     ];
 
-    sheet.appendRow(newRow);
-
-    const protocolo = `${sheet.getSheetName()}-${sheet.getLastRow() - 1}`; // simples identificador
+    sheet.appendRow(row);
 
     return jsonResponse(201, {
       sucesso: true,
       mensagem: 'Submissão registada com sucesso.',
-      protocolo,
-      estado: 'Pendente'
+      estado: 'Em análise'
     });
   } catch (err) {
     return jsonResponse(400, {
