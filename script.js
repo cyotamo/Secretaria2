@@ -142,6 +142,52 @@ document.addEventListener("DOMContentLoaded", () => {
         if (phoneInput) {
             applyPhoneMask(phoneInput);
         }
+
+        const submitButton = panel.querySelector(".btn-submeter");
+        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxapEKl3M9stXl4jx_bl9Z5m99jqItOSXrvFdAB8TY6sVjnt4SKo8nwB2Cnzfxgbf3NFQ/exec";
+
+        if (submitButton) {
+            submitButton.addEventListener("click", async (event) => {
+                event.preventDefault();
+
+                const nome = document.getElementById("nomeCompleto")?.value.trim() || "";
+                const numeroEstudante = document.getElementById("numeroEstudante")?.value.trim() || "";
+                const contacto = document.getElementById("contactoTelefonico")?.value.trim() || "";
+                const curso = document.getElementById("curso")?.value || "";
+                const tituloTema = document.getElementById("tituloTema")?.value.trim() || "";
+                const descricaoTema = document.getElementById("descricaoTema")?.value.trim() || "";
+
+                const payload = {
+                    nome,
+                    numeroEstudante,
+                    contacto,
+                    curso,
+                    tituloTema,
+                    descricaoTema,
+                };
+
+                try {
+                    const response = await fetch(WEBAPP_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                    });
+
+                    const data = await response.json();
+
+                    if (data?.sucesso === true) {
+                        const protocolo = data.protocolo ? `\n${data.protocolo}` : "";
+                        alert(`Tema submetido com sucesso${protocolo}`);
+                    } else {
+                        const mensagem = data?.mensagem || data?.erro || "Falha ao submeter tema";
+                        alert(`Erro: ${mensagem}`);
+                    }
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : "Erro desconhecido";
+                    alert(`Erro: ${message}`);
+                }
+            });
+        }
     }
 
     attachGroupListeners(sidebar);
