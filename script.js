@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const panel = document.getElementById("contentPanel");
+    const layout = document.querySelector("main.layout");
     const sidebar = document.querySelector(".sidebar");
     const managerAccessCode = "1234";
 
@@ -194,53 +195,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderGestorDashboard() {
-        if (!panel) return;
+        if (!layout) return;
 
-        panel.innerHTML = `
-            <div class="group">
-                <button class="group-btn" data-group="gestor-processos">Gerir Processos</button>
-                <div class="group-body" id="gestor-processos">
-                    <button class="menu-btn" data-admin="true" data-feature="Submissões de tema de monografia">Submissões de tema de monografia</button>
-                    <button class="menu-btn" data-admin="true" data-feature="Homologação de supervisores">Homologação de supervisores</button>
-                    <button class="menu-btn" data-admin="true" data-feature="Versão final da monografia">Versão final da monografia</button>
-                    <button class="menu-btn" data-admin="true" data-feature="Buscar estudante">Buscar estudante</button>
+        if (sidebar) {
+            sidebar.style.display = "none";
+        }
+
+        layout.innerHTML = `
+            <aside class="sidebar gestor-sidebar">
+                <div class="group">
+                    <button class="group-btn" data-group="gestor-processos">Gerir Processos</button>
+                    <div class="group-body" id="gestor-processos">
+                        <button class="menu-btn menu-btn-gestor" data-feature="Submissões de tema de monografia">Submissões de tema de monografia</button>
+                        <button class="menu-btn menu-btn-gestor" data-feature="Homologação de supervisores">Homologação de supervisores</button>
+                        <button class="menu-btn menu-btn-gestor" data-feature="Versão final da monografia">Versão final da monografia</button>
+                        <button class="menu-btn menu-btn-gestor" data-feature="Buscar estudante">Buscar estudante</button>
+                    </div>
                 </div>
-            </div>
 
-            <div class="group">
-                <button class="group-btn" data-group="gestor-relatorios">Relatórios</button>
-                <div class="group-body" id="gestor-relatorios">
-                    <button class="menu-btn" data-admin="true" data-feature="Supervisores homologados">Supervisores homologados</button>
-                    <button class="menu-btn" data-admin="true" data-feature="Supervisores por homologar">Supervisores por homologar</button>
+                <div class="group">
+                    <button class="group-btn" data-group="gestor-relatorios">Relatórios</button>
+                    <div class="group-body" id="gestor-relatorios">
+                        <button class="menu-btn menu-btn-gestor" data-feature="Supervisores homologados">Supervisores homologados</button>
+                        <button class="menu-btn menu-btn-gestor" data-feature="Supervisores por homologar">Supervisores por homologar</button>
+                    </div>
                 </div>
-            </div>
+            </aside>
 
-            <div class="gestor-conteudo" id="gestorFeatureContent">
+            <section class="content" id="gestorPainel">
                 <h2>Painel do Gestor</h2>
                 <p>Selecione uma funcionalidade para ver mais detalhes.</p>
-            </div>
+            </section>
         `;
 
-        attachGroupListeners(panel);
+        const gestorSidebar = layout.querySelector(".gestor-sidebar");
+        const gestorPainel = layout.querySelector("#gestorPainel");
 
-        const gestorContent = panel.querySelector("#gestorFeatureContent");
+        attachGroupListeners(gestorSidebar);
 
-        const attachGestorMenuListeners = () => {
-            panel.querySelectorAll('.menu-btn[data-admin="true"]').forEach(btn => {
-                btn.addEventListener("click", () => {
-                    const feature = btn.dataset.feature;
+        gestorSidebar?.querySelectorAll(".menu-btn-gestor").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const feature = btn.dataset.feature;
 
-                    if (gestorContent) {
-                        gestorContent.innerHTML = `
-                            <h2>${feature}</h2>
-                            <p>Conteúdo de gestão será adicionado.</p>
-                        `;
-                    }
-                });
+                if (gestorPainel) {
+                    gestorPainel.innerHTML = `
+                        <h2>${feature}</h2>
+                        <p>Conteúdo de gestão será adicionado.</p>
+                    `;
+                }
             });
-        };
-
-        attachGestorMenuListeners();
+        });
     }
 
     if (loginForm) {
@@ -251,10 +255,8 @@ document.addEventListener("DOMContentLoaded", () => {
             loginError.remove();
 
             if (codigo === managerAccessCode) {
-                console.log("Gestor autenticado");
-                renderGestorDashboard();
-                alert("Acesso concedido ao painel do gestor");
                 closeLogin();
+                renderGestorDashboard();
                 loginForm.reset();
             } else {
                 const parent = codigoAcessoInput?.parentElement;
