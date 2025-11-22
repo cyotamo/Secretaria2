@@ -1,8 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const panel = document.getElementById("contentPanel");
+    let panel = document.getElementById("contentPanel");
     const layout = document.querySelector("main.layout");
-    const sidebar = document.querySelector(".sidebar");
+    let sidebar = document.querySelector(".sidebar");
     const managerAccessCode = "1234";
+    const header = document.querySelector(".topbar");
+    const originalLayoutHTML = layout?.innerHTML || "";
+    let logoutButton = null;
 
     function attachGroupListeners(scope) {
         if (!scope) return;
@@ -148,6 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const closeLoginModal = document.getElementById("closeLoginModal");
     const cancelLoginModal = document.getElementById("cancelLoginModal");
     const loginButton = document.querySelector(".btn-login");
+    const originalLoginText = loginButton?.textContent || "Login Docentes/Gestores";
     const loginForm = document.getElementById("loginForm");
     const codigoAcessoInput = document.getElementById("codigoAcesso");
     const loginError = document.createElement("p");
@@ -197,8 +201,18 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderGestorDashboard() {
         if (!layout) return;
 
-        if (sidebar) {
-            sidebar.style.display = "none";
+        loginButton?.removeEventListener("click", openLoginModal);
+        loginButton.textContent = "Gestor (online)";
+
+        if (!logoutButton) {
+            logoutButton = document.createElement("button");
+            logoutButton.className = "btn-logout";
+            logoutButton.textContent = "Sair";
+            logoutButton.addEventListener("click", handleLogout);
+        }
+
+        if (header && logoutButton && !header.contains(logoutButton)) {
+            header.appendChild(logoutButton);
         }
 
         layout.innerHTML = `
@@ -228,12 +242,14 @@ document.addEventListener("DOMContentLoaded", () => {
             </section>
         `;
 
-        const gestorSidebar = layout.querySelector(".gestor-sidebar");
+        sidebar = layout.querySelector(".gestor-sidebar");
+        panel = null;
+
         const gestorPainel = layout.querySelector("#gestorPainel");
 
-        attachGroupListeners(gestorSidebar);
+        attachGroupListeners(sidebar);
 
-        gestorSidebar?.querySelectorAll(".menu-btn-gestor").forEach(btn => {
+        sidebar?.querySelectorAll(".menu-btn-gestor").forEach(btn => {
             btn.addEventListener("click", () => {
                 const feature = btn.dataset.feature;
 
@@ -245,6 +261,45 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         });
+    }
+
+    function restoreStudentDashboard() {
+        if (!layout) return;
+
+        layout.innerHTML = originalLayoutHTML;
+        sidebar = layout.querySelector(".sidebar");
+        panel = layout.querySelector("#contentPanel");
+
+        if (sidebar) {
+            sidebar.style.display = "block";
+        }
+
+        if (panel) {
+            panel.innerHTML = "";
+        }
+
+        attachGroupListeners(sidebar);
+        attachStudentMenuListeners();
+    }
+
+    function handleLogout() {
+        restoreStudentDashboard();
+
+        if (logoutButton && logoutButton.parentElement) {
+            logoutButton.parentElement.removeChild(logoutButton);
+        }
+
+        if (loginButton) {
+            loginButton.textContent = originalLoginText;
+            loginButton.removeEventListener("click", openLoginModal);
+            loginButton.addEventListener("click", openLoginModal);
+        }
+
+        loginError.remove();
+
+        if (codigoAcessoInput) {
+            codigoAcessoInput.value = "";
+        }
     }
 
     if (loginForm) {
