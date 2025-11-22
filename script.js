@@ -146,7 +146,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const submitButton = panel.querySelector(".btn-submeter");
         const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbylHZEGwG3E0wg0ejejN5ktHX2gRkIuJ6HCscTjge7A1WyGu1GGGN59JDqlrKp1Hyz9Wg/exec";
 
+        const formFields = [
+            document.getElementById("nomeCompleto"),
+            document.getElementById("numeroEstudante"),
+            document.getElementById("contactoTelefonico"),
+            document.getElementById("curso"),
+            document.getElementById("tituloTema"),
+            document.getElementById("descricaoTema"),
+        ];
+
         if (submitButton) {
+            formFields.forEach((field) => {
+                field?.addEventListener("input", () => {
+                    submitButton.disabled = false;
+                });
+            });
+
             submitButton.addEventListener("click", async (event) => {
                 event.preventDefault();
 
@@ -172,12 +187,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         body: payload,
                     });
 
+                    submitButton.disabled = true;
+
                     const data = await response.json();
 
-                    if (data?.sucesso === true) {
-                        const protocolo = data.protocolo ? `\n${data.protocolo}` : "";
-                        alert(`Tema submetido com sucesso${protocolo}`);
-                    } else {
+                    if (data?.sucesso !== true) {
                         const mensagem = data?.mensagem || data?.erro || "Falha ao submeter tema";
                         alert(`Erro: ${mensagem}`);
                     }
