@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const submitButton = panel.querySelector(".btn-submeter");
-        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxapEKl3M9stXl4jx_bl9Z5m99jqItOSXrvFdAB8TY6sVjnt4SKo8nwB2Cnzfxgbf3NFQ/exec";
+        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycby7W6s3X0MMN4kFkvt59uJ9GIWYNzmfWuOFSyUt0xk7AKDqmlpfJd2jNN53vPfRa6x6sQ/exec";
 
         if (submitButton) {
             submitButton.addEventListener("click", async (event) => {
@@ -158,12 +158,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 const descricaoTema = document.getElementById("descricaoTema")?.value.trim() || "";
 
                 const payload = {
-                    nome,
-                    numeroEstudante,
-                    contacto,
-                    curso,
-                    tituloTema,
-                    descricaoTema,
+                    Nome: nome,
+                    NumeroEstudante: numeroEstudante,
+                    Contacto: contacto,
+                    Curso: curso,
+                    TituloTema: tituloTema,
+                    DescricaoTema: descricaoTema,
                 };
 
                 try {
