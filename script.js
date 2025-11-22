@@ -4,10 +4,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const managerAccessCode = "1234";
 
     function attachGroupListeners(scope) {
+        if (!scope) return;
+
         scope.querySelectorAll(".group-btn").forEach(btn => {
             btn.addEventListener("click", () => {
                 const id = btn.dataset.group;
-                const body = scope.querySelector(`#${id}`) || document.getElementById(id);
+                const body = scope.querySelector(`#${id}`);
 
                 if (body) {
                     body.style.display = body.style.display === "block" ? "none" : "block";
@@ -138,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    attachGroupListeners(document);
+    attachGroupListeners(sidebar);
     attachStudentMenuListeners();
 
     const loginOverlay = document.getElementById("loginOverlay");
@@ -223,18 +225,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const gestorContent = panel.querySelector("#gestorFeatureContent");
 
-        panel.querySelectorAll('.menu-btn[data-admin="true"]').forEach(btn => {
-            btn.addEventListener("click", () => {
-                const feature = btn.dataset.feature;
+        const attachGestorMenuListeners = () => {
+            panel.querySelectorAll('.menu-btn[data-admin="true"]').forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const feature = btn.dataset.feature;
 
-                if (gestorContent) {
-                    gestorContent.innerHTML = `
-                        <h2>${feature}</h2>
-                        <p>Conteúdo de gestão será adicionado.</p>
-                    `;
-                }
+                    if (gestorContent) {
+                        gestorContent.innerHTML = `
+                            <h2>${feature}</h2>
+                            <p>Conteúdo de gestão será adicionado.</p>
+                        `;
+                    }
+                });
             });
-        });
+        };
+
+        attachGestorMenuListeners();
     }
 
     if (loginForm) {
