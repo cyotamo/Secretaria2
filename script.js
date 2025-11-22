@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let sidebar = document.querySelector(".sidebar");
     const managerAccessCode = "1234";
     const header = document.querySelector(".topbar");
+    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbylHZEGwG3E0wg0ejejN5ktHX2gRkIuJ6HCscTjge7A1WyGu1GGGN59JDqlrKp1Hyz9Wg/exec";
     const originalLayoutHTML = layout?.innerHTML || "";
     let logoutButton = null;
 
@@ -186,8 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const submitButton = panel.querySelector(".btn-submeter");
-        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbylHZEGwG3E0wg0ejejN5ktHX2gRkIuJ6HCscTjge7A1WyGu1GGGN59JDqlrKp1Hyz9Wg/exec";
-
         const formFields = [
             document.getElementById("nomeCompleto"),
             document.getElementById("numeroEstudante"),
@@ -364,6 +363,11 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.addEventListener("click", () => {
                 const feature = btn.dataset.feature;
 
+                if (feature === "Submissões de tema de monografia") {
+                    renderGestorSubmissoes(gestorPainel);
+                    return;
+                }
+
                 if (gestorPainel) {
                     gestorPainel.innerHTML = `
                         <h2>${feature}</h2>
@@ -372,6 +376,184 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         });
+    }
+
+    function renderGestorSubmissoes(gestorPainel) {
+        if (!gestorPainel) return;
+
+        gestorPainel.innerHTML = `
+            <h2>Submissões de tema de monografia</h2>
+            <p>As submissões realizadas pelos estudantes aparecem abaixo.</p>
+        `;
+
+        const container = document.createElement("div");
+        gestorPainel.appendChild(container);
+
+        const statusMessage = document.createElement("p");
+        statusMessage.textContent = "A carregar submissões...";
+        container.appendChild(statusMessage);
+
+        const rowsPerPage = 10;
+        let currentPage = 1;
+        let submissions = [];
+
+        function renderTablePage() {
+            container.innerHTML = "";
+
+            const table = document.createElement("table");
+            const thead = document.createElement("thead");
+            const headerRow = document.createElement("tr");
+            const headers = [
+                "Número do estudante",
+                "Nome",
+                "Curso",
+                "Título do Tema",
+                "Supervisor",
+                "Parecer",
+                "Ações"
+            ];
+
+            headers.forEach(text => {
+                const th = document.createElement("th");
+                th.textContent = text;
+                headerRow.appendChild(th);
+            });
+
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+            const start = (currentPage - 1) * rowsPerPage;
+            const pageItems = submissions.slice(start, start + rowsPerPage);
+
+            pageItems.forEach(submission => {
+                const row = document.createElement("tr");
+
+                const numberCell = document.createElement("td");
+                numberCell.textContent = submission.numeroEstudante || "";
+                row.appendChild(numberCell);
+
+                const nameCell = document.createElement("td");
+                nameCell.textContent = submission.nome || "";
+                row.appendChild(nameCell);
+
+                const courseCell = document.createElement("td");
+                courseCell.textContent = submission.curso || "";
+                row.appendChild(courseCell);
+
+                const titleCell = document.createElement("td");
+                titleCell.textContent = submission.tituloTema || "";
+                row.appendChild(titleCell);
+
+                const supervisorCell = document.createElement("td");
+                const supervisorInput = document.createElement("input");
+                supervisorInput.type = "text";
+                supervisorInput.value = submission.supervisor || "";
+                supervisorCell.appendChild(supervisorInput);
+                row.appendChild(supervisorCell);
+
+                const parecerCell = document.createElement("td");
+                const parecerInput = document.createElement("input");
+                parecerInput.type = "text";
+                parecerInput.value = submission.parecer || "";
+                parecerCell.appendChild(parecerInput);
+                row.appendChild(parecerCell);
+
+                const actionsCell = document.createElement("td");
+                const saveButton = document.createElement("button");
+                saveButton.textContent = "Guardar";
+                saveButton.addEventListener("click", async () => {
+                    saveButton.disabled = true;
+                    saveButton.textContent = "A guardar...";
+
+                    try {
+                        const response = await fetch(WEBAPP_URL, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                action: "atualizarParecerSupervisor",
+                                linha: submission.linha,
+                                supervisor: supervisorInput.value.trim(),
+                                parecer: parecerInput.value.trim()
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result?.sucesso) {
+                            submission.supervisor = supervisorInput.value.trim();
+                            submission.parecer = parecerInput.value.trim();
+                            saveButton.textContent = "Guardado";
+                        } else {
+                            const mensagem = result?.mensagem || result?.erro || "Não foi possível actualizar.";
+                            alert(mensagem);
+                            saveButton.textContent = "Guardar";
+                        }
+                    } catch (error) {
+                        const message = error instanceof Error ? error.message : "Erro desconhecido";
+                        alert(message);
+                        saveButton.textContent = "Guardar";
+                    } finally {
+                        saveButton.disabled = false;
+                    }
+                });
+
+                actionsCell.appendChild(saveButton);
+                row.appendChild(actionsCell);
+
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            container.appendChild(table);
+
+            const pagination = document.createElement("div");
+            const prevButton = document.createElement("button");
+            prevButton.textContent = "Página anterior";
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener("click", () => {
+                if (currentPage > 1) {
+                    currentPage -= 1;
+                    renderTablePage();
+                }
+            });
+
+            const nextButton = document.createElement("button");
+            nextButton.textContent = "Página seguinte";
+            const totalPages = Math.max(1, Math.ceil(submissions.length / rowsPerPage));
+            nextButton.disabled = currentPage >= totalPages;
+            nextButton.addEventListener("click", () => {
+                if (currentPage < totalPages) {
+                    currentPage += 1;
+                    renderTablePage();
+                }
+            });
+
+            pagination.appendChild(prevButton);
+            pagination.appendChild(nextButton);
+            container.appendChild(pagination);
+        }
+
+        fetch(`${WEBAPP_URL}?action=listarSubmissoes`)
+            .then(response => response.json())
+            .then(data => {
+                submissions = Array.isArray(data) ? data : [];
+
+                if (submissions.length === 0) {
+                    container.innerHTML = "";
+                    const emptyMessage = document.createElement("p");
+                    emptyMessage.textContent = "Não existem submissões para apresentar.";
+                    container.appendChild(emptyMessage);
+                    return;
+                }
+
+                renderTablePage();
+            })
+            .catch(() => {
+                statusMessage.textContent = "Não foi possível carregar as submissões.";
+            });
     }
 
     function restoreStudentDashboard() {
